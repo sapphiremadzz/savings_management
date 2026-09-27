@@ -221,8 +221,8 @@ class TransactionPage(QFrame):
        # before this save on the databases, we must validate if the amount enter is valid
        try:
            valid_amount = self.service.validate_amount(amount_text)
-       except ValueError as err:
-           msg = QMessageBox(QMessageBox.Icon.Warning, "Invalid Input", str(err), parent=self)
+       except ValueError as e:
+           msg = QMessageBox(QMessageBox.Icon.Warning, "Invalid Input", str(e), parent=self)
            msg.setFont(msg_font)
            msg.setStyleSheet(white_bg_style)
            msg.exec()
@@ -265,6 +265,8 @@ class TransactionPage(QFrame):
            self.edit_amount.clear()
            self.edit_description.clear()
            self.date_box.setDate(QDate.currentDate())
+           self.comboType.setCurrentIndex(0)
+           self.updateType_combo(0)
        else:
            cancel_msg = QMessageBox(
                QMessageBox.Icon.Information, "Message", "Transaction Cancelled", parent=self

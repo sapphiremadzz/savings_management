@@ -91,17 +91,18 @@ class HistoryPage(QFrame):
         # this is fot the recent transaction card
         # this frame serves as the cards or box for viewing every records
         self.item_frame = QFrame()
-        self.item_frame.setMinimumHeight(80)
+        self.item_frame.setFixedHeight(80)
         self.item_frame.setStyleSheet("background-color: #f8fbf9; border: 1px solid #e0f2f1; border-radius: 8px;")
 
         item_layout = QHBoxLayout(self.item_frame)
-        item_layout.setContentsMargins(10, 4, 10, 4)
+        item_layout.setContentsMargins(10, 0, 10, 0)
+        item_layout.setSpacing(8)
         item_layout.setAlignment(Qt.AlignmentFlag.AlignVCenter)
 
         # this is something like a logo, and the icon will just display the first letter of each category in uppercase
         # category[0] means the first index of the letter
         is_expense = str(transaction.trans_type).lower() == "expense"
-        icon_letter = transaction.category[0].upper() if transaction.category else "T"
+        icon_letter = str(transaction.category)[0].upper() if transaction.category else "T"
         bg_color = "#fde8e8" if is_expense else "#e8f5e9"
         fg_color = "#ad5a61" if is_expense else "#2e7d32"
 
@@ -109,16 +110,18 @@ class HistoryPage(QFrame):
         icon_label.setFont(QFont("Arial", 10, weight=QFont.Weight.Bold))
         icon_label.setFixedSize(40, 40)
         icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        icon_label.setStyleSheet(f"background-color: {bg_color}; color: {fg_color}; border-radius: 20px; border: none;")
+        icon_label.setStyleSheet(f"background-color: {bg_color}; color: {fg_color}; border-radius: 0px; border: none;")
+        item_layout.addWidget(icon_label, 0, Qt.AlignmentFlag.AlignVCenter)
 
         # this part is for the Category and UID
         text_container = QWidget()
         text_container.setStyleSheet("background-color: transparent; border: none;")
         text_layout = QVBoxLayout(text_container)
-        text_layout.setSpacing(0)
-        text_layout.setContentsMargins(5, 0, 0, 0)
+        text_layout.setSpacing(1)
+        text_layout.setContentsMargins(0, 0, 0, 0)
+        text_layout.setAlignment(Qt.AlignmentFlag.AlignVCenter)
 
-        title_label = QLabel(transaction.category)
+        title_label = QLabel(str(transaction.category) if transaction.category else "Uncategorized")
         title_label.setFont(QFont("Arial", 10, weight=QFont.Weight.Bold))
         title_label.setStyleSheet("color: #2c3e50; border: none; margin: 0px; padding: 0px;")
 
@@ -137,10 +140,15 @@ class HistoryPage(QFrame):
         """I set the description into optional, if the users didnt input something on the description     
                 only the category and UID will be displayed"""
         if transaction.description:
-            desc_label = QLabel(f"Note: {transaction.description}")
+            desc_text = str(transaction.description)
+            if len(desc_text) > 50:
+                desc_text = desc_text[:50] + "..."
+            desc_label = QLabel(f"Note: {desc_text}")
             desc_label.setFont(QFont("Arial", 8, italic=True))
             desc_label.setStyleSheet("color: #4a5568; border: none; margin: 0px; padding: 0px;")
             text_layout.addWidget(desc_label)
+
+        item_layout.addWidget(text_container, 1, Qt.AlignmentFlag.AlignVCenter)
 
         # this is for the formatted date and amount with prefix + for income and - for expense
         amount_date_container = QWidget()
@@ -148,52 +156,60 @@ class HistoryPage(QFrame):
 
         amount_date_layout = QVBoxLayout(amount_date_container)
         amount_date_layout.setContentsMargins(0, 0, 0, 0)
-        amount_date_layout.setSpacing(2)
+        amount_date_layout.setSpacing(1)
+        amount_date_layout.setAlignment(Qt.AlignmentFlag.AlignVCenter)
 
         prefix = "-" if is_expense else "+"
         amount_color = "#630903" if is_expense else "#03632e"
 
-        amount_label = QLabel(f"{prefix}{transaction.amount:,.2f}")
-        amount_label.setFont(QFont("Arial", 11, weight=QFont.Weight.Bold))
-        amount_label.setStyleSheet(f"color: {amount_color}; border: none;")
-        amount_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)  # Dito i-adjust ang alignment!
+        try:
+            amt_val = float(transaction.amount) if transaction.amount is not None else 0.0
+            formatted_amount = f"{prefix}{amt_val:,.2f}"
+        except (ValueError, TypeError):
+            formatted_amount = f"{prefix}{transaction.amount}"
 
-        date = QDate.fromString(transaction.date, "yyyy-MM-dd")
-        formatted_date = date.toString("MMM dd, yyyy") if date.isValid() else transaction.date
+        amount_label = QLabel(formatted_amount)
+        amount_label.setFont(QFont("Arial", 10, weight=QFont.Weight.Bold))
+        amount_label.setStyleSheet(f"color: {amount_color}; border: none; margin: 0px; padding: 0px;")
+        amount_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
 
-        date_label = QLabel(f"· {formatted_date}")
+        raw_date_str = str(transaction.date) if transaction.date else ""
+        date = QDate.fromString(raw_date_str, "yyyy-MM-dd")
+        formatted_date = date.toString("MMM dd, yyyy") if date.isValid() else raw_date_str
+
+        date_label = QLabel(formatted_date)
         date_label.setFont(QFont("Arial", 8))
-        date_label.setStyleSheet("color: gray; border: none;")
-        date_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)  # Dito rin i-adjust ang alignment!
+        date_label.setStyleSheet("color: gray; border: none; margin: 0px; padding: 0px;")
+        date_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
 
         amount_date_layout.addWidget(amount_label)
         amount_date_layout.addWidget(date_label)
 
-        item_layout.addWidget(icon_label)
-        item_layout.addWidget(text_container)
-        item_layout.addStretch()
-        item_layout.addWidget(amount_date_container)
-
+        item_layout.addWidget(amount_date_container, 0, Qt.AlignmentFlag.AlignVCenter)
 
         if show_buttons:
-            item_layout.addSpacing(10)
+            btn_container = QWidget()
+            btn_container.setStyleSheet("background-color: transparent; border: none;")
+            btn_layout = QHBoxLayout(btn_container)
+            btn_layout.setContentsMargins(4, 0, 0, 0)
+            btn_layout.setSpacing(4)
+            btn_layout.setAlignment(Qt.AlignmentFlag.AlignVCenter)
+
             update_button = QPushButton("Update")
             update_button.setFont(QFont("Arial", 8, weight=QFont.Weight.Bold))
-            update_button.setFixedSize(75, 28)
+            update_button.setFixedSize(70, 26)
             update_button.setStyleSheet("""
-                            QPushButton {
-                                background-color: #0ea131; 
-                                color: white; 
-                                border-radius: 4px;
-                                border: none;
-                                padding: 0px;
-                            }
-                            QPushButton:hover {
-                                background-color: #0b8027;
-                            }
-                        """)
-
-
+                                        QPushButton {
+                                            background-color: #0ea131; 
+                                            color: white; 
+                                            border-radius: 4px;
+                                            border: none;
+                                            padding: 0px;
+                                        }
+                                        QPushButton:hover {
+                                            background-color: #0b8027;
+                                        }
+                                    """)
 
             update_button.clicked.connect(
                 lambda checked, obj=transaction: self.update_historyClicked(obj)
@@ -201,25 +217,27 @@ class HistoryPage(QFrame):
 
             delete_button = QPushButton("Delete")
             delete_button.setFont(QFont("Arial", 8, weight=QFont.Weight.Bold))
-            delete_button.setFixedSize(75, 28)
+            delete_button.setFixedSize(70, 26)
             delete_button.setStyleSheet("""
-                            QPushButton {
-                                background-color: #a1270e; 
-                                color: white; 
-                                border-radius: 4px;
-                                border: none;
-                                padding: 0px;
-                            }
-                            QPushButton:hover {
-                                background-color: #801f0b;
-                            }
-                        """)
+                                        QPushButton {
+                                            background-color: #a1270e; 
+                                            color: white; 
+                                            border-radius: 4px;
+                                            border: none;
+                                            padding: 0px;
+                                        }
+                                        QPushButton:hover {
+                                            background-color: #801f0b;
+                                        }
+                                    """)
             delete_button.clicked.connect(
                 lambda checked, obj=transaction, widget=self.item_frame: self.delete_historyClicked(obj, widget)
             )
 
-            item_layout.addWidget(update_button)
-            item_layout.addWidget(delete_button)
+            btn_layout.addWidget(update_button)
+            btn_layout.addWidget(delete_button)
+
+            item_layout.addWidget(btn_container, 0, Qt.AlignmentFlag.AlignVCenter)
 
         return self.item_frame
 
