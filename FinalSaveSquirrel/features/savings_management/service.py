@@ -27,7 +27,7 @@ class SavingsService:
         return self.repository.get_all_transactions()
 
     def delete(self, trans_id: int) -> Savings:
-        dummy_savings = Savings(
+        delete_savings = Savings(
             id=trans_id,
             trans_type="Expense",
             category="General",
@@ -35,7 +35,7 @@ class SavingsService:
             description="",
             date=""
         )
-        return self.repository.delete_transaction(dummy_savings)
+        return self.repository.delete_transaction(delete_savings)
 
     def fetch_formatted_history(self, limit: int | None = None) -> list[dict]:
         all_transactions = self.get_transaction()

@@ -222,25 +222,23 @@ class TransactionPage(QFrame):
        try:
            valid_amount = self.service.validate_amount(amount_text)
        except ValueError as e:
-           msg = QMessageBox(QMessageBox.Icon.Warning, "Invalid Input", str(e), parent=self)
+           msg = QMessageBox(QMessageBox.Icon.Warning, "Invalid Input", str(e))
            msg.setFont(msg_font)
            msg.setStyleSheet(white_bg_style)
            msg.exec()
            return
-
 
        msg = QMessageBox(
            QMessageBox.Icon.Question,
            "Confirm",
            "Are you sure you want to submit this transaction?",
            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-           parent=self,
+
        )
        msg.setFont(msg_font)
        msg.setStyleSheet(white_bg_style)
 
        if msg.exec() == QMessageBox.StandardButton.Yes:
-
            new_savings = Savings(
                trans_type=trans_type,
                category=category,
@@ -255,12 +253,11 @@ class TransactionPage(QFrame):
                self.dashboard_page.refresh_recent_transactions()
 
            info_msg = QMessageBox(
-               QMessageBox.Icon.Information, "Success", "Transaction saved successfully!", parent=self
+               QMessageBox.Icon.Information, "Success", "Transaction saved successfully!"
            )
            info_msg.setFont(msg_font)
            info_msg.setStyleSheet(white_bg_style)
            info_msg.exec()
-
 
            self.edit_amount.clear()
            self.edit_description.clear()
@@ -269,7 +266,7 @@ class TransactionPage(QFrame):
            self.updateType_combo(0)
        else:
            cancel_msg = QMessageBox(
-               QMessageBox.Icon.Information, "Message", "Transaction Cancelled", parent=self
+               QMessageBox.Icon.Information, "Message", "Transaction Cancelled"
            )
            cancel_msg.setFont(msg_font)
            cancel_msg.setStyleSheet(white_bg_style)

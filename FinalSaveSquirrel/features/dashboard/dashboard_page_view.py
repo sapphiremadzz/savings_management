@@ -11,8 +11,8 @@ from features.savings_management.service import SavingsService
 #THIS CLASS IS FOR DASHBOARD UI
 class DashboardPage(QFrame):
 
-    def __init__(self , dashboard_service: DashboardService, savings_service: SavingsService, parent=None):
-        super().__init__(parent)
+    def __init__(self , dashboard_service: DashboardService, savings_service: SavingsService):
+        super().__init__()
         self.dashboard_service = dashboard_service
         self.savings_service = savings_service
         self.setStyleSheet("background-color: white; border-radius: 10px; padding: 5px;")
@@ -182,10 +182,7 @@ class DashboardPage(QFrame):
                 oldest_item.widget().deleteLater()
 
     def clear_recent_transactions(self):
-        while self.recentTransactions_layout.count() > 0:
-            item = self.recentTransactions_layout.takeAt(0)
-            if item.widget():
-                item.widget().deleteLater()
+        HistoryPage.clear_layout(self.recentTransactions_layout)
 
     def load_recent_transactions(self):
         """this function fetches latest database entries and populates the recent transactions feed."""

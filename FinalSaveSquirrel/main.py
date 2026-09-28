@@ -102,7 +102,6 @@ class MainWindow(QMainWindow):
         self.history_page.load_history()
         self.pages.setCurrentIndex(2)  # when the user click the view history button the view history window will display
 
-
 def main():
     app = QApplication(sys.argv)
     window = MainWindow()

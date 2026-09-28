@@ -12,25 +12,25 @@ from features.savings_management.transaction_page_view import TransactionPage
 msg_font = QFont("Arial", 11)
 white_bg_style = """
                     QMessageBox {
-                        background-color: #5c826f;
-                    }
-                    QMessageBox QLabel {
-                        color: white;
-                        background-color: transparent;
-                        border: none;
-                    }
-                    QMessageBox QPushButton { 
-                        background-color: #ffffff; 
-                        color: #19572a; 
-                        border-radius: 4px; 
-                        min-width: 30px;
-                        min-height: 10px;
-                        font-weight: bold; 
-                        border: none;
-                    }
-                    QMessageBox QPushButton:hover { 
-                        background-color: #e0f2f1; 
-                    }
+                               background-color: #5c826f;
+                           }
+                           QMessageBox QLabel {
+                               color: white;
+                               background-color: transparent;
+                               border: none;
+                           }
+                           QMessageBox QPushButton { 
+                               background-color: #ffffff; 
+                               color: #19572a; 
+                               border-radius: 4px; 
+                               min-width: 30px;
+                               min-height: 10px;
+                               font-weight: bold; 
+                               border: none;
+                           }
+                           QMessageBox QPushButton:hover { 
+                               background-color: #e0f2f1; 
+                           }
                 """
 
 # THIS CLASS IS FOR HISTORY UI
@@ -241,13 +241,10 @@ class HistoryPage(QFrame):
 
         return self.item_frame
 
-
     def add_history(self, transaction: Savings, show_buttons=True):
-
         item_frame = self.add_historyCard(transaction=transaction,
             show_buttons=show_buttons)
         self.historyTransaction_layout.addWidget(item_frame)
-
 
     def delete_historyClicked(self , transaction : Savings, item_widget):
         msg = QMessageBox(self)
@@ -312,6 +309,30 @@ class HistoryPage(QFrame):
         edit_page.submit_transaction.clicked.disconnect()
 
         def save_changes():
+
+            raw_amount = edit_page.edit_amount.text()
+
+            try:
+                valid = self.service.validate_amount(raw_amount) #check if the updated amount is valid
+            except  ValueError as e:
+                msg = QMessageBox(dialog)
+                msg.setIcon(QMessageBox.Icon.Warning)
+                msg.setWindowTitle("Invalid Input")
+                msg.setText(str(e))
+                msg.setFont(msg_font)
+                msg.setStyleSheet(white_bg_style)
+                msg.exec()
+                return
+
+            updated_savings = Savings(
+                id=transaction.id,
+                trans_type=edit_page.comboType.currentText(),
+                category=edit_page.comboCategory.currentText(),
+                amount=valid,
+                description=edit_page.edit_description.text(),
+                date=edit_page.date_box.date().toString("yyyy-MM-dd")
+            )
+
             confirm_msg = QMessageBox(dialog)
             confirm_msg.setIcon(QMessageBox.Icon.Question)
             confirm_msg.setWindowTitle("Confirm Update")
@@ -324,21 +345,12 @@ class HistoryPage(QFrame):
             if confirm_msg.exec() != QMessageBox.StandardButton.Yes:
                 return
 
-            updated_savings = Savings(
-                id=transaction.id,
-                trans_type=edit_page.comboType.currentText(),
-                category=edit_page.comboCategory.currentText(),
-                amount=edit_page.edit_amount.text(),
-                description=edit_page.edit_description.text(),
-                date=edit_page.date_box.date().toString("yyyy-MM-dd")
-            )
-
             try:
                 self.service.update(updated_savings)
             except Exception as e:
                 msg = QMessageBox(dialog)
                 msg.setIcon(QMessageBox.Icon.Warning)
-                msg.setWindowTitle("Invalid Input")
+                msg.setWindowTitle("Error")
                 msg.setText(str(e))
                 msg.setFont(msg_font)
                 msg.setStyleSheet(white_bg_style)
@@ -362,12 +374,16 @@ class HistoryPage(QFrame):
         if dialog.exec() == QDialog.DialogCode.Accepted:
             self.load_history()
 
-    def clear_history_layout(self):
-        """Clears all item widgets from the scroll view."""
-        while self.historyTransaction_layout.count() > 0:
-            item = self.historyTransaction_layout.takeAt(0)
+    @staticmethod
+    def clear_layout(layout):
+        """Clears all item widgets from any given layout."""
+        while layout.count() > 0:
+            item = layout.takeAt(0)
             if item.widget():
                 item.widget().deleteLater()
+
+    def clear_history_layout(self):
+        HistoryPage.clear_layout(self.historyTransaction_layout)
 
     def load_history(self):
         """Fetches items from database helper and updates cached transactions."""
@@ -379,11 +395,16 @@ class HistoryPage(QFrame):
         self.clear_history_layout()
         query = self.search_bar.text().strip().lower()
 
-        # Apply search condition against category
+        # Apply search condition against category and UID, set formatted ID so that when users type 0000, magshow up gihapon siya
         filtered_items = [
             item for item in self.all_transactions_cache
             if query in str(item.get("category", "")).lower()
+            or query in str(item.get("id", "")).lower()
+            or query in f"#{item.get('id', 0):06d}".lower()
         ]
+
+        #if users search something on the search bar but hindi siya nakasave sa dataabse or wala sa itemframe
+        #magdidisplay na no matchingtransactions found, or if wala pang transactions,no transactions yet ang lalabas
 
         if not filtered_items:
             no_data_msg = "No matching transactions found" if query else "No transactions yet"

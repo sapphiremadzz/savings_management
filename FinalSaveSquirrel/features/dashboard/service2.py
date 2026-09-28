@@ -5,7 +5,8 @@ class DashboardService:
     def __init__(self, repository: SavingsRepository):
         self.repository = repository
 
-    def calculate_savings(self):
+    def calculate_savings(self) -> tuple[float, float, float]:
+        """Calculates total income, total expense, and total savings from repository transactions."""
         all_transactions = self.repository.get_all_transactions()
 
         income = sum(t.amount for t in all_transactions if t.trans_type == "Income")
