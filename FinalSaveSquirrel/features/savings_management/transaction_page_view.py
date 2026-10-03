@@ -14,7 +14,8 @@ data = {
        "Expense": ["Transportation", "Food", "Bills" , "Travels" , "Shopping" , "Tuition", "Other"]
    }
 
-#THIS CLASS IS FOR TRANSACTIONS UI
+#THIS CLASS IS FOR TRANSACTIONS VIEWING (WITH UI)
+#this class inherit QFrame
 class TransactionPage(QFrame):
    def __init__(self , service : SavingsService , dashboard_page = None):
        super().__init__()
@@ -26,6 +27,7 @@ class TransactionPage(QFrame):
        self.initUI()
 
    def initUI(self):
+       #the main layout
        self.transaction_layout = QVBoxLayout()
        self.setLayout(self.transaction_layout)
 
@@ -39,16 +41,18 @@ class TransactionPage(QFrame):
        self.transactionBox()
 
    def transactionBox(self) :
+       #this is the containter para sa mga input fields
        self.transaction_box = QFrame()
        self.transaction_box.setStyleSheet("background-color: #c5e3ce; border-radius: 0px;")
 
+        #then this is the layout inside of the container which is the transaction_box
        box_layout = QVBoxLayout()
        box_layout.setContentsMargins(20, 20, 20, 20)
        box_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
        self.transaction_box.setLayout(box_layout)
 
        # this is the for combo box transaction window where the users select which type of transactions they want to submit
-       type_cat_grid = QGridLayout()  # i used grid layout to align my labels and comboboxes for better interaction
+       type_cat_grid = QGridLayout()  # i used grid layout to align my labels and comboboxes for better layouts
        type_cat_grid.setSpacing(10)
 
        #labels for type and category
@@ -62,7 +66,12 @@ class TransactionPage(QFrame):
        self.category_label.setStyleSheet("color: #19572a;")
        self.category_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
 
+       type_layout = QHBoxLayout() #HORIZONTAL, LEFT AND RIGHT
+       type_layout.addWidget(self.type_label)
+       type_layout.addWidget(self.category_label)
+
        # this is a dependent combobox
+       #THIS IS FOR THE COMBOBOXES
        self.model = QStandardItemModel()
        # QStandardItemModel used to display data from the comboboxes
        # this has a hierarchy structure, a parent-child structure
@@ -87,18 +96,19 @@ class TransactionPage(QFrame):
            for value in v:
                category = QStandardItem(value)
                type.appendRow(category)
-
+    #this is the signal if user changed the choosen type
        self.comboType.currentIndexChanged.connect(self.updateType_combo)
        self.updateType_combo(0)  # this initially displays the income and its categories Allowance
        # The value 0 represents the first item in the ComboBox, which is Income.
        # herefore, when the form initially opens, the category ComboBox displays the categories under Income.
-
+        #aligning the type and category in grid laouts
        type_cat_grid.addWidget(self.type_label, 0, 0)  # row 0, column 0
        type_cat_grid.addWidget(self.comboType, 1, 0)  # row 1, column 0
        type_cat_grid.addWidget(self.category_label, 0, 1)  # row 0, column 1
        type_cat_grid.addWidget(self.comboCategory, 1, 1)  # row 1, column 1
 
-       # this is for typing the amount
+       # THIS IS FOR THE AMOUNT FIELD, INPUTING AMOUNTS
+
        self.amount_label = QLabel("Enter amount", self)
        self.amount_label.setFont(QFont('Arial', 12, weight=QFont.Weight.Bold))
        self.amount_label.setStyleSheet("color: #19572a;")
@@ -108,20 +118,19 @@ class TransactionPage(QFrame):
        self.edit_amount = QLineEdit()
        self.edit_amount.setStyleSheet("color: #19572a; font-size: 12px; background-color: white;")
 
-       type_layout = QHBoxLayout()
-       type_layout.addWidget(self.type_label)
-       type_layout.addWidget(self.category_label)
-
        amount_label_layout = QHBoxLayout()
        amount_label_layout.addWidget(self.amount_label)
        amount_layout = QHBoxLayout()
        amount_layout.addWidget(self.edit_amount)
 
-       # this is for typing description , users will put the description of their transaction but it is also optional
+        #THIS IS FOR THE DESCRIPTION ITS OPTIONAL THOUGH
+
+       #Just input something if you want your transaction to me more detailed
+       # this is for typing description , users will put the description of their transaction
        self.description_label = QLabel("Description", self)
        self.description_label.setFont(QFont('Arial', 12, weight=QFont.Weight.Bold))
        self.description_label.setStyleSheet("color: #19572a;")
-
+        #this is where users edit their description, one line.
        self.edit_description = QLineEdit()
        self.edit_description.setPlaceholderText("(optional)")
        self.edit_description.setStyleSheet("color: #19572a; font-size: 12px; background-color: white;")
@@ -132,13 +141,14 @@ class TransactionPage(QFrame):
        description_layout = QHBoxLayout()
        description_layout.addWidget(self.edit_description)
 
+        #THIS IS FOR THE DATE FIELD
        self.date_label = QLabel("Date", self)
        self.date_label.setFont(QFont('Arial', 12, weight=QFont.Weight.Bold))
        self.date_label.setStyleSheet("color: #19572a;")
 
        self.date_box = QDateEdit()
        # QDateEdit is specifically designed to display and edit dates.
-       self.date_box.setDate(QDate.currentDate())
+       self.date_box.setDate(QDate.currentDate()) #I set it to current date, real time date
        self.date_box.setCalendarPopup(True)  # this pop up the calendar
        self.date_box.setStyleSheet("color: #19572a; font-size: 12px; background-color: white;")
 
@@ -148,6 +158,7 @@ class TransactionPage(QFrame):
        date_layout = QHBoxLayout()
        date_layout.addWidget(self.date_box)
 
+        #ADD SUBMIT BUTTON
        # this is for the submitting of transactions, users will clicked the button if they wanted to submit their transaction
        self.submit_transaction = QPushButton("Submit Transaction", self)
        self.submit_transaction.setStyleSheet("color: white; font-size: 12px; background-color: #22573a;")
@@ -176,17 +187,13 @@ class TransactionPage(QFrame):
        """sets the selected transaction type as the root index of the category ComboBox,
               allowing it to display only the child categories associated with that transaction type.
               so for example if users chooses expenses,
-              then its categories [transportation, food, others] will display"""
-       self.comboCategory.setRootModelIndex(
-           indx)
+              then its categories [transportation, food, bills, etc...] will display"""
+       self.comboCategory.setRootModelIndex(indx)
        self.comboCategory.setCurrentIndex(0)
 
    # this part is on the transaction page where if the users click the submit button,
    # there is a messagebox that will pop up,
    def add_transactionClicked(self):
-       self.validation()
-
-   def validation(self):
        trans_type = self.comboType.currentText()
        category = self.comboCategory.currentText()
        amount_text = self.edit_amount.text()
@@ -194,28 +201,31 @@ class TransactionPage(QFrame):
        dates = self.date_box.date().toString("yyyy-MM-dd")
 
        msg_font = QFont("Arial", 11)
+       #for style sheet
        white_bg_style = """
-                           QMessageBox {
-                               background-color: #5c826f;
-                           }
-                           QMessageBox QLabel {
-                               color: white;
-                               background-color: transparent;
-                               border: none;
-                           }
-                           QMessageBox QPushButton { 
-                               background-color: #ffffff; 
-                               color: #19572a; 
-                               border-radius: 4px; 
-                               min-width: 30px;
-                               min-height: 10px;
-                               font-weight: bold; 
-                               border: none;
-                           }
-                           QMessageBox QPushButton:hover { 
-                               background-color: #e0f2f1; 
-                           }
-                       """
+           QMessageBox {
+               background-color: #5c826f;
+           }
+           QMessageBox QLabel {
+               color: white;
+               background-color: transparent;
+               border: none;
+               font-size: 13px;
+           }
+           QMessageBox QPushButton { 
+               background-color: #ffffff; 
+               color: #19572a; 
+               border-radius: 4px; 
+               min-width: 40px;
+               min-height: 20px;
+               padding: 4px 12px;
+               font-weight: bold; 
+               border: none;
+           }
+           QMessageBox QPushButton:hover { 
+               background-color: #e0f2f1; 
+           }
+       """
 
        # Hand off logic and validation
        # before this save on the databases, we must validate if the amount enter is valid
@@ -228,6 +238,8 @@ class TransactionPage(QFrame):
            msg.exec()
            return
 
+        #this is for the confirmation
+       #this will pop up if your inputs are valid
        msg = QMessageBox(
            QMessageBox.Icon.Question,
            "Confirm",
@@ -239,6 +251,7 @@ class TransactionPage(QFrame):
        msg.setStyleSheet(white_bg_style)
 
        if msg.exec() == QMessageBox.StandardButton.Yes:
+           #instantiate the new Savings object and assign the form inputs to its attributes
            new_savings = Savings(
                trans_type=trans_type,
                category=category,
@@ -246,12 +259,15 @@ class TransactionPage(QFrame):
                description=description,
                date=dates
            )
+           #if users select yes, this will save to the database through service class
 
            self.service.add_transaction(new_savings)
 
+            #update the dashboard page, especially if theres new transactions, amounts on the dashboard will also change
            if self.dashboard_page:
                self.dashboard_page.refresh_recent_transactions()
 
+            #this will pop up if your transaction is success and save to the database
            info_msg = QMessageBox(
                QMessageBox.Icon.Information, "Success", "Transaction saved successfully!"
            )
@@ -259,23 +275,17 @@ class TransactionPage(QFrame):
            info_msg.setStyleSheet(white_bg_style)
            info_msg.exec()
 
+            #for cleaning input fields after it save
            self.edit_amount.clear()
            self.edit_description.clear()
            self.date_box.setDate(QDate.currentDate())
            self.comboType.setCurrentIndex(0)
            self.updateType_combo(0)
        else:
+           #this will pop up if users select no, meaning transaction was failed or cancelled
            cancel_msg = QMessageBox(
                QMessageBox.Icon.Information, "Message", "Transaction Cancelled"
            )
            cancel_msg.setFont(msg_font)
            cancel_msg.setStyleSheet(white_bg_style)
            cancel_msg.exec()
-
-
-
-
-
-
-
-

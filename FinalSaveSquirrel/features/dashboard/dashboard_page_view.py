@@ -18,6 +18,7 @@ class DashboardPage(QFrame):
         self.setStyleSheet("background-color: white; border-radius: 10px; padding: 5px;")
         self.initUI()
 
+        # Fetch and display the latest transactions on initial startup
         self.refresh_recent_transactions()
 
     def initUI(self) -> None:
@@ -26,6 +27,7 @@ class DashboardPage(QFrame):
         self.setLayout(dashboard_layout)
 
         # this is the main frame of dashboard that will display on the screen
+        #Main page title header
         self.dashboard_label = QLabel("Dashboard", self)
         self.dashboard_label.setFont(QFont('Arial', 30, weight=QFont.Weight.Bold))
         self.dashboard_label.setStyleSheet("color: #19572a;")  # this color is likely darkgreen
@@ -37,7 +39,7 @@ class DashboardPage(QFrame):
         self.dashboard2_label.setStyleSheet("color: #19572a;")
         self.dashboard2_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
 
-        self.dashboard3_label = QLabel("Here is an overview", self)
+        self.dashboard3_label = QLabel("Here is an overview of your savings", self)
         self.dashboard3_label.setFont(QFont('Arial', 11))
         self.dashboard3_label.setStyleSheet("color: gray; padding: 10px;")
         self.dashboard3_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
@@ -47,7 +49,8 @@ class DashboardPage(QFrame):
         dashboard_layout.addWidget(self.dashboard2_label)
         dashboard_layout.addWidget(self.dashboard3_label)
 
-#I used grid layout to align my cards
+        #I used grid layout to align my cards
+        #THIS IS FOR THE SUMMARY CARDS(INCOME, SAVINGS AND EXPENSES)
         dashboard_cardLayout = QGridLayout()
         dashboard_cardLayout.setContentsMargins(0, 0, 0, 0)
 
@@ -148,6 +151,8 @@ class DashboardPage(QFrame):
         scrollArea.setWidgetResizable(True)
         scrollArea.setStyleSheet("background-color: transparent; border: none; outline: none;")
 
+        #enable the scrolling when content items exceed the container height
+        #para dli macut ang items
         self.scroll_content = QWidget()
         self.scroll_content.setStyleSheet("background-color: transparent; border: none;")
         self.recentTransactions_layout = QVBoxLayout(self.scroll_content)
@@ -161,8 +166,9 @@ class DashboardPage(QFrame):
         dashboard_layout.addStretch()
 
     def add_recentTransaction(self , transaction: Savings, show_buttons=False):
-
         history_edit = HistoryPage(service=self.savings_service)
+        #just reused the code from the History_page_view
+        #giset ko lang ang show button into false so dli makita tong update ug delete na buttons
         item_frame = history_edit.add_historyCard(
             transaction=transaction,
             show_buttons=show_buttons
@@ -182,6 +188,8 @@ class DashboardPage(QFrame):
                 oldest_item.widget().deleteLater()
 
     def clear_recent_transactions(self):
+        #para dli magbalikbalik or magduplicate ang mga item frames
+        #gireuse lang naku siya na code
         HistoryPage.clear_layout(self.recentTransactions_layout)
 
     def load_recent_transactions(self):
@@ -192,7 +200,8 @@ class DashboardPage(QFrame):
         """if there is no transactions added, then the box will display No transactions
         but when users add transaction from transaction page, the default text will disappear
         and it will display the recent transactions ,limit to recent 20 items"""
-        if not recent_transactions:
+
+        if not recent_transactions: #kung wala kay transactions
             no_data_label = QLabel("No transactions yet")
             no_data_label.setFont(QFont("Arial", 11, weight=QFont.Weight.Bold))
             no_data_label.setStyleSheet("color: #083b1f; border: none;")
@@ -201,24 +210,20 @@ class DashboardPage(QFrame):
             self.recentTransactions_layout.addWidget(no_data_label)
             return
 
+            #idisplay lang tong mga transactions without the buttons
         for item in recent_transactions:
-            savings_obj = Savings(
-                id=item["id"],
-                trans_type=item.get("trans_type") or ("Expense" if item.get("is_expense") else "Income"),
-                category=item["category"],
-                amount=item["amount"],
-                description=item.get("description", ""),
-                date=item["date"]
-            )
-            self.add_recentTransaction(savings_obj, show_buttons=False)
+            self.add_recentTransaction(item, show_buttons=False)
 
     def refresh_recent_transactions(self):
         summary = self.dashboard_service.fetch_dashboard_summary()
-        self.update_totals(summary.income, summary.expense, summary.savings)
+        # 1. Fetch total summaries from service
+        self.update_totals(summary.get_income(), summary.get_expense(), summary.get_savings())
         self.load_recent_transactions()
+        #for refreshing
 
     def update_totals(self, income, expense, savings):
-        """to update displayed totals in the dashboard dynamically whenever a new item is submitted."""
+        """format number and to update displayed totals in the dashboard
+        dynamically whenever a new item is submitted."""
         self.income_box.setText(f"₱{income:,.2f}")
         self.expense_box.setText(f"₱{expense:,.2f}")
         self.savings_box.setText(f"₱{savings:,.2f}")

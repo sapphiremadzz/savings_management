@@ -1,10 +1,12 @@
 from database.savings_database import SavingsDatabase
 from features.savings_management.model import Savings
 
+#THIS FILE COMMUNICATES DIRECTLY TO THE DATABASE
 class SavingsRepository:
     def __init__(self, database: SavingsDatabase):
         self.database = database
 
+#This function insert a new record to the savings
     def add_transaction_list(self, savings: Savings) -> Savings:
         with self.database.connect() as conn:
             cursor = conn.execute("""
@@ -20,6 +22,7 @@ class SavingsRepository:
             savings.id = cursor.lastrowid
         return savings
 
+#this functions retrieves all transactions ordered from newest to oldest
     def get_all_transactions(self) -> list[Savings]:
         with self.database.connect() as conn:
             rows = conn.execute(
@@ -34,11 +37,13 @@ class SavingsRepository:
             date=row[5]
         ) for row in rows]
 
+#This is for deleting a specific transaction row by matching its id
     def delete_transaction(self, savings: Savings) -> Savings:
         with self.database.connect() as conn:
             conn.execute("DELETE FROM savings WHERE id = ?", (savings.id,))
         return savings
 
+#this is for modifying an existing transaction records with new values
     def update_transaction(self, savings: Savings) -> Savings:
         with self.database.connect() as conn:
             conn.execute("""

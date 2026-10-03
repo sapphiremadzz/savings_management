@@ -12,6 +12,30 @@ from features.savings_management.history_page_view import HistoryPage
 from features.dashboard.dashboard_page_view import DashboardPage
 from features.savings_management.transaction_page_view import TransactionPage
 
+from features.savings_goal.savings_goal_view import SavingsGoalPage
+from features.savings_goal.repository3 import GoalRepository
+from features.savings_goal.service3 import ServiceGoal
+
+BUTTON_STYLE = """
+    QPushButton {
+        color: #19572a;
+        background-color: transparent;
+        font-size: 14px;
+        padding: 12px 16px;
+        text-align: center;
+        border: none;
+        border-radius: 8px;
+        margin: 2px 10px;
+    }
+    QPushButton:hover {
+        background-color: #d8ebd9;
+        color: #19572a;
+    }
+    QPushButton:pressed {
+        background-color: #c5e1c6;
+    }
+"""
+
 class MainWindow(QMainWindow):
 
     def __init__(self):
@@ -24,6 +48,9 @@ class MainWindow(QMainWindow):
         self.repository = SavingsRepository(self.db)
         self.savings_service = SavingsService(self.repository)
         self.dashboard_service = DashboardService(self.repository)
+
+        self.goal_repository = GoalRepository(self.db)
+        self.goal_service = ServiceGoal(self.goal_repository, self.dashboard_service)
 
         self.initUI()
 
@@ -50,22 +77,27 @@ class MainWindow(QMainWindow):
 
         # these area the buttons of the sideframe
 
-        self.add_button = QPushButton("+ Add Transaction", self)
-        self.add_button.setStyleSheet("color: #19572a; font-size: 15px; padding: 10px;")
+        self.dashboard_button = QPushButton("Dashboard", self)
+        self.dashboard_button.setStyleSheet(BUTTON_STYLE)
+        self.dashboard_button.clicked.connect(self.add_dashboardClicked)
+
+        self.add_button = QPushButton("Add Transaction", self)
+        self.add_button.setStyleSheet(BUTTON_STYLE)
         self.add_button.clicked.connect(self.add_buttonClicked)
 
-        self.history_button = QPushButton("🔍 View History", self)
-        self.history_button.setStyleSheet("color: #19572a; font-size: 15px; padding: 10px;")
+        self.history_button = QPushButton("View / Edit History", self)
+        self.history_button.setStyleSheet(BUTTON_STYLE)
         self.history_button.clicked.connect(self.add_historyClicked)
 
-        self.dashboard_button = QPushButton("🏠 Dashboard", self)
-        self.dashboard_button.setStyleSheet("color: #19572a; font-size: 15px; padding: 10px;")
-        self.dashboard_button.clicked.connect(self.add_dashboardClicked)
+        self.goals_button = QPushButton("Savings Goals", self)
+        self.goals_button.setStyleSheet(BUTTON_STYLE)
+        self.goals_button.clicked.connect(self.add_goalsClicked)
 
         self.side_layout.addWidget(self.label)
         self.side_layout.addWidget(self.dashboard_button)
         self.side_layout.addWidget(self.add_button)
         self.side_layout.addWidget(self.history_button)
+        self.side_layout.addWidget(self.goals_button)
         self.side_layout.addStretch()
 
         # Stacked widget , used for switching multiple pages... displaying one page a time
@@ -82,10 +114,14 @@ class MainWindow(QMainWindow):
         self.history_page = HistoryPage(
             service=self.savings_service
         )
+        self.goals_page = SavingsGoalPage(
+            service_goal=self.goal_service
+        )
 
         self.pages.addWidget(self.dashboard_page)
         self.pages.addWidget(self.transaction_page)
         self.pages.addWidget(self.history_page)
+        self.pages.addWidget(self.goals_page)
 
         # main window, the window that is visible to the screen
         main_frameLayout.addWidget(self.side_frame)  # this is the side frame
@@ -101,6 +137,10 @@ class MainWindow(QMainWindow):
     def add_historyClicked(self):
         self.history_page.load_history()
         self.pages.setCurrentIndex(2)  # when the user click the view history button the view history window will display
+
+    def add_goalsClicked(self):
+        self.pages.setCurrentIndex(3)
+        print("hello")
 
 def main():
     app = QApplication(sys.argv)
